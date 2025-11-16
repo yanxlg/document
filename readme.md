@@ -27,11 +27,11 @@ A local web-based document editor based on OnlyOffice, allowing you to edit docu
 
 ### URL Parameters
 
-| Parameter | Description | Values/Type | Priority |
-|-----------|-------------|-------------|----------|
-| `locale` | Set interface language | `en`, `zh` | - |
-| `src` | Open document from URL (recommended) | URL string | Low |
-| `file` | Open document from URL (backward compatible) | URL string | High |
+| Parameter | Description                                  | Values/Type | Priority |
+| --------- | -------------------------------------------- | ----------- | -------- |
+| `locale`  | Set interface language                       | `en`, `zh`  | -        |
+| `src`     | Open document from URL (recommended)         | URL string  | Low      |
+| `file`    | Open document from URL (backward compatible) | URL string  | High     |
 
 **Examples:**
 
@@ -111,6 +111,7 @@ If you want to add the Arial font to the project:
 4. When the application references index `223`, it will automatically load the font file from `public/fonts/223`
 
 Similarly, for other Arial variants:
+
 - Arial Bold uses index `226` → place font file as `public/fonts/226`
 - Arial Italic uses index `224` → place font file as `public/fonts/224`
 - Arial Bold Italic uses index `225` → place font file as `public/fonts/225`

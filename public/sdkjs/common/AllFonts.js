@@ -1,12 +1,12 @@
 /*
  * FONT LICENSE NOTICE:
  * This file contains font name references for UI display purposes only.
- * The actual font files with copyright restrictions (Windows system fonts like Arial, 
+ * The actual font files with copyright restrictions (Windows system fonts like Arial,
  * Microsoft YaHei, SimSun, etc.) have been removed from this project.
  * Only open-source fonts are included in the public/fonts directory.
- * 
- * The font names listed here are for compatibility with existing documents that may 
- * reference these fonts. The application will attempt to use system fonts or fallback 
+ *
+ * The font names listed here are for compatibility with existing documents that may
+ * reference these fonts. The application will attempt to use system fonts or fallback
  * to open-source alternatives when these fonts are not available.
  */
 ((window.__all_fonts_js_version__ = 2),
