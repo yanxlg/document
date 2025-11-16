@@ -81,7 +81,6 @@ services:
 
 - **CORS**: Remote servers must support CORS when using `src` or `file` parameters
 - **File Size**: Large files may take longer to load
-- **Supported Formats**: DOCX, XLSX, PPTX, CSV, DOC, XLS, PPT, ODT, ODS, ODP, RTF, TXT, and more
 
 ## 🔧 Local Development
 

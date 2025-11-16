@@ -81,7 +81,6 @@ services:
 
 - **CORS**: 使用 `src` 或 `file` 参数时，远程服务器必须支持 CORS
 - **文件大小**: 大文件可能需要较长时间加载
-- **支持格式**: DOCX、XLSX、PPTX、CSV、DOC、XLS、PPT、ODT、ODS、ODP、RTF、TXT 等多种格式
 
 ## 🔧 本地开发
 
