@@ -23,7 +23,7 @@ export function setUICallbacks(callbacks: {
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.accept = '.docx,.xlsx,.pptx,.doc,.xls,.ppt,.csv';
-fileInput.style.setProperty('visibility', 'hidden');
+fileInput.style.setProperty('display', 'none');
 document.body.appendChild(fileInput);
 
 export const onCreateNew = async (ext: string): Promise<void> => {

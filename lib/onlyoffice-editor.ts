@@ -1,5 +1,5 @@
 import 'ranui/message';
-import { createObjectURL } from 'ranuts/utils';
+import { createObjectURL, MessageCodec } from 'ranuts/utils';
 import { getDocmentObj } from '../store';
 import { getOnlyOfficeLang, t } from './i18n';
 import { c_oAscFileType2 } from './file-types';
@@ -283,6 +283,20 @@ export function createEditorInstance(config: {
             console.log(`${t('documentLoaded')}${fileName}`);
             // Note: For CSV files, the save dialog may show XLSX format,
             // but the actual save will be forced to CSV format in handleSaveDocument
+
+            // Notify the parent page that the document is ready
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(
+                MessageCodec.encode({
+                  type: 'DOCUMENT_READY',
+                  payload: {
+                    fileName,
+                    fileType,
+                  },
+                }),
+                '*',
+              );
+            }
           },
           onSave: handleSaveDocument,
           // writeFile
