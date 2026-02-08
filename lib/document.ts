@@ -2,6 +2,7 @@ import { createObjectURL } from 'ranuts/utils';
 import { getDocmentObj, setDocmentObj } from '../store';
 import { handleDocumentOperation, initX2T, loadEditorApi, loadScript } from './converter';
 import { showLoading } from './loading';
+import { notifyParent } from './onlyoffice-editor';
 
 // Import UI functions with type-only to avoid circular dependency
 // These will be passed as callbacks or called after document operations
@@ -182,7 +183,9 @@ export const openDocumentFromUrl = async (url: string, fileName?: string): Promi
     }
   } catch (error) {
     console.error('Error opening document from URL:', error);
-    alert(`Failed to open document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    notifyParent('EDITOR_ERROR', { error: errorMessage, url });
+    alert(`Failed to open document: ${errorMessage}`);
     if (showControlPanelFn) {
       showControlPanelFn();
     }

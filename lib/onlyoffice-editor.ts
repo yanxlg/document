@@ -1,10 +1,20 @@
 import 'ranui/message';
 import { createObjectURL, MessageCodec } from 'ranuts/utils';
-import { getDocmentObj } from '../store';
+import { getDocmentObj, isPreviewMode } from '../store';
 import { getOnlyOfficeLang, t } from './i18n';
 import { c_oAscFileType2 } from './file-types';
 import type { SaveEvent } from './document-types';
 import { getMimeTypeFromExtension } from './document-utils';
+
+/**
+ * Send an encoded message to the parent page via postMessage.
+ * All messages follow the { type, payload } structure and are encoded with MessageCodec.
+ */
+export function notifyParent(type: string, payload: Record<string, unknown>): void {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage(MessageCodec.encode({ type, payload }), '*');
+  }
+}
 
 // Import converter function to avoid circular dependency
 let convertBinToDocumentAndDownloadFn:
@@ -147,31 +157,43 @@ async function handleWriteFile(event: any) {
 async function handleSaveDocument(event: SaveEvent) {
   console.log('Save document event:', event);
 
-  if (event.data && event.data.data) {
-    const { data, option } = event.data;
+  try {
+    if (event.data && event.data.data) {
+      const { data, option } = event.data;
+      const { fileName } = getDocmentObj() || {};
+
+      // Determine target format from editor's output format
+      let targetFormat = c_oAscFileType2[option.outputformat];
+
+      // Only force CSV format if the original file is CSV
+      // This check ensures XLSX and other file types are not affected
+      // CSV files are converted to XLSX internally, so editor may return XLSX format
+      if (fileName && fileName.toLowerCase().endsWith('.csv')) {
+        targetFormat = 'CSV';
+        console.log('Original file is CSV, forcing save as CSV format');
+      } else {
+        // For non-CSV files (XLSX, DOCX, PPTX, etc.), use the format returned by editor
+        // This ensures XLSX files are saved as XLSX, not CSV
+        console.log(`Saving as ${targetFormat} format (original file: ${fileName})`);
+      }
+
+      // Create download
+      if (convertBinToDocumentAndDownloadFn) {
+        await convertBinToDocumentAndDownloadFn(data.data, fileName, targetFormat);
+      } else {
+        throw new Error('Converter callback not set');
+      }
+
+      notifyParent('SAVE_RESULT', { success: true, fileName, format: targetFormat });
+    }
+  } catch (error) {
+    console.error('Error saving document:', error);
     const { fileName } = getDocmentObj() || {};
-
-    // Determine target format from editor's output format
-    let targetFormat = c_oAscFileType2[option.outputformat];
-
-    // Only force CSV format if the original file is CSV
-    // This check ensures XLSX and other file types are not affected
-    // CSV files are converted to XLSX internally, so editor may return XLSX format
-    if (fileName && fileName.toLowerCase().endsWith('.csv')) {
-      targetFormat = 'CSV';
-      console.log('Original file is CSV, forcing save as CSV format');
-    } else {
-      // For non-CSV files (XLSX, DOCX, PPTX, etc.), use the format returned by editor
-      // This ensures XLSX files are saved as XLSX, not CSV
-      console.log(`Saving as ${targetFormat} format (original file: ${fileName})`);
-    }
-
-    // Create download
-    if (convertBinToDocumentAndDownloadFn) {
-      await convertBinToDocumentAndDownloadFn(data.data, fileName, targetFormat);
-    } else {
-      throw new Error('Converter callback not set');
-    }
+    notifyParent('SAVE_RESULT', {
+      success: false,
+      fileName,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
   // Notify editor that save is complete
@@ -233,6 +255,8 @@ export function createEditorInstance(config: {
     const editorLang = getOnlyOfficeLang();
     console.log('Creating new editor instance for:', fileName, 'type:', fileType);
 
+    const preview = isPreviewMode();
+
     try {
       window.editor = new window.DocsAPI.DocEditor('iframe', {
         document: {
@@ -240,17 +264,19 @@ export function createEditorInstance(config: {
           url: fileName, // Use file name as identifier
           fileType: fileType,
           permissions: {
-            edit: true,
+            edit: !preview,
             chat: false,
             protect: false,
           },
         },
         editorConfig: {
           lang: editorLang,
+          mode: preview ? 'view' : 'edit',
           customization: {
             help: false,
             about: false,
             hideRightMenu: true,
+            toolbar: preview ? false : undefined,
             features: {
               spellcheck: {
                 change: false,
@@ -285,18 +311,7 @@ export function createEditorInstance(config: {
             // but the actual save will be forced to CSV format in handleSaveDocument
 
             // Notify the parent page that the document is ready
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage(
-                MessageCodec.encode({
-                  type: 'DOCUMENT_READY',
-                  payload: {
-                    fileName,
-                    fileType,
-                  },
-                }),
-                '*',
-              );
-            }
+            notifyParent('DOCUMENT_READY', { fileName, fileType });
           },
           onSave: handleSaveDocument,
           // writeFile
@@ -306,6 +321,11 @@ export function createEditorInstance(config: {
       });
     } catch (error) {
       console.error('Error creating editor instance:', error);
+      notifyParent('EDITOR_ERROR', {
+        error: error instanceof Error ? error.message : String(error),
+        fileName,
+        fileType,
+      });
       throw error;
     }
   });

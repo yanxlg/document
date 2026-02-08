@@ -8,6 +8,7 @@ import {
   showControlPanel,
   showMenuGuide,
 } from './lib/ui';
+import { setPreviewMode } from './store';
 import 'ranui/button';
 import './styles/base.css';
 
@@ -20,6 +21,14 @@ declare global {
       DocEditor: new (elementId: string, config: any) => any;
     };
   }
+}
+
+// Check for mode parameter in URL
+// ?mode=preview enables read-only preview mode (no toolbar, no editing, no UI controls)
+const { file, src, mode } = getAllQueryString();
+const preview = mode === 'preview';
+if (preview) {
+  setPreviewMode(true);
 }
 
 // Initialize events
@@ -45,9 +54,11 @@ window.onCreateNew = onCreateNew;
 window.hideControlPanel = hideControlPanel;
 window.showControlPanel = showControlPanel;
 
-// Initialize UI components
-createFixedActionButton();
-createControlPanel();
+// Only create UI controls in non-preview mode
+if (!preview) {
+  createFixedActionButton();
+  createControlPanel();
+}
 
 // Check for file or src parameter in URL
 // Both parameters support opening document from URL
@@ -56,7 +67,6 @@ createControlPanel();
 //   ?file=https://example.com/doc.docx
 //   ?src=https://example.com/doc.docx
 //   ?file=doc1.docx&src=doc2.xlsx (will use file: doc1.docx)
-const { file, src } = getAllQueryString();
 const documentUrl = file || src;
 if (documentUrl) {
   // Decode URL if it's encoded
