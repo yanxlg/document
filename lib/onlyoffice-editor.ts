@@ -272,11 +272,14 @@ export function createEditorInstance(config: {
         editorConfig: {
           lang: editorLang,
           mode: preview ? 'view' : 'edit',
+          user: {
+            name: 'Guest',
+          },
           customization: {
             help: false,
             about: false,
             hideRightMenu: true,
-            toolbar: preview ? false : undefined,
+            ...(preview ? { toolbar: false } : {}),
             features: {
               spellcheck: {
                 change: false,
